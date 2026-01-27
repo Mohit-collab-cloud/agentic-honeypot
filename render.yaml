@@ -1,0 +1,39 @@
+services:
+  - type: web
+    name: agentic-honeypot
+    runtime: python311
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    
+    # Automatic redeploys on GitHub push
+    repo: https://github.com/YOUR_USERNAME/agentic-honeypot
+    branch: main
+    autoDeploy: true
+    
+    # Environment variables (set in Render dashboard UI)
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0
+      
+      # Don't put secrets here - set in Render dashboard instead
+      # This ensures they're encrypted and not in version control
+    
+    # Health check
+    healthCheckPath: /health
+    healthCheckInterval: 30
+    healthCheckTimeout: 5
+    
+    # Resources
+    plan: free  # or 'starter', 'standard', 'pro'
+    numInstances: 1
+    
+    # Build configuration
+    buildFilter:
+      paths:
+        - '**.py'
+        - 'requirements.txt'
+        - 'frontend/**'
+      ignoredPaths:
+        - '.env'
+        - '*.md'
+        - '.git/**'
