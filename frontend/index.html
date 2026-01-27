@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🍯 Agentic Honeypot Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            background: linear-gradient(135deg, #0f0f1e 0%, #1a1a2e 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #e0e0e0;
+        }
+
+        #root {
+            width: 100%;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+            animation: fadeInDown 0.6s ease;
+        }
+
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+
+        .subtitle {
+            font-size: 1.1em;
+            opacity: 0.95;
+            font-weight: 300;
+        }
+
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+            margin-bottom: 25px;
+        }
+
+        .card {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            border-radius: 12px;
+            padding: 28px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            animation: slideUp 0.5s ease;
+            border: 1px solid rgba(102, 126, 234, 0.2);
+        }
+
+        .card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 40px rgba(102, 126, 234, 0.2);
+            border-color: rgba(102, 126, 234, 0.4);
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .card h2 {
+            color: #64b5f6;
+            margin-bottom: 20px;
+            font-size: 1.4em;
+            font-weight: 700;
+            border-bottom: 2px solid #64b5f6;
+            padding-bottom: 12px;
+            letter-spacing: -0.3px;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #64b5f6;
+            font-size: 0.95em;
+        }
+
+        input, textarea, select {
+            width: 100%;
+            padding: 12px 14px;
+            border: 2px solid #2a3f5f;
+            border-radius: 8px;
+            font-size: 0.95em;
+            transition: all 0.3s ease;
+            font-family: inherit;
+            background: #0f1419;
+            color: #e0e0e0;
+        }
+
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: #64b5f6;
+            box-shadow: 0 0 0 4px rgba(100, 181, 246, 0.1);
+            background: #1a2236;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+            font-family: 'Menlo', 'Monaco', 'Courier New', monospace;
+            font-size: 0.9em;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        button {
+            flex: 1;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.95em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-send {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-send:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-send:active {
+            transform: translateY(0);
+        }
+
+        .btn-reset {
+            background: #2a3f5f;
+            color: #64b5f6;
+            border: 2px solid #3a5f8f;
+        }
+
+        .btn-reset:hover {
+            background: #3a5f8f;
+            border-color: #64b5f6;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-box {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 24px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.2);
+        }
+
+        .stat-number {
+            font-size: 2.2em;
+            font-weight: 700;
+            margin-bottom: 8px;
+            letter-spacing: -1px;
+        }
+
+        .stat-label {
+            font-size: 0.85em;
+            opacity: 0.9;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .conversation-view {
+            background: #0f1419;
+            border-radius: 10px;
+            padding: 20px;
+            min-height: 350px;
+            max-height: 400px;
+            overflow-y: auto;
+            border: 1px solid #2a3f5f;
+        }
+
+        .message {
+            margin-bottom: 16px;
+            padding: 14px 16px;
+            border-radius: 10px;
+            animation: slideIn 0.3s ease;
+            line-height: 1.5;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .message.scammer {
+            background: #2d1f1f;
+            border-left: 4px solid #ef5350;
+            margin-right: 25px;
+        }
+
+        .message.agent {
+            background: #1f2d3d;
+            border-left: 4px solid #64b5f6;
+            margin-left: 25px;
+        }
+
+        .message-sender {
+            font-weight: 700;
+            font-size: 0.85em;
+            margin-bottom: 6px;
+            color: #64b5f6;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+
+        .message-text {
+            color: #e0e0e0;
+            word-wrap: break-word;
+        }
+
+        .response-container {
+            background: #0f1419;
+            border-left: 4px solid #64b5f6;
+            border-radius: 8px;
+            padding: 16px;
+            margin-top: 20px;
+            max-height: 300px;
+            overflow-y: auto;
+            font-family: 'JetBrains Mono', 'Courier New', monospace;
+            font-size: 0.85em;
+            line-height: 1.5;
+        }
+
+        .response-container pre {
+            margin: 0;
+            color: #64b5f6;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.8em;
+            font-weight: 600;
+            margin: 6px 0;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+
+        .badge-success {
+            background: #1b5e20;
+            color: #81c784;
+        }
+
+        .badge-danger {
+            background: #b71c1c;
+            color: #ef9a9a;
+        }
+
+        .badge-info {
+            background: #01579b;
+            color: #64b5f6;
+        }
+
+        .intelligence-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+        }
+
+        .intelligence-item {
+            background: #0f1419;
+            padding: 12px;
+            border-radius: 6px;
+            border-left: 3px solid #64b5f6;
+        }
+
+        .intelligence-item strong {
+            display: block;
+            margin-bottom: 6px;
+            color: #64b5f6;
+            font-size: 0.85em;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+
+        .intelligence-item code {
+            background: #1a2236;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-family: 'JetBrains Mono', 'Courier New', monospace;
+            color: #81c784;
+            font-weight: 600;
+        }
+
+        .loading {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            color: #64b5f6;
+            font-weight: 600;
+            font-size: 0.95em;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 18px;
+            height: 18px;
+            border: 3px solid #2a3f5f;
+            border-top-color: #64b5f6;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .error-message {
+            background: #fadbd8;
+            border: 1px solid #f5b7b1;
+            color: #c0392b;
+            padding: 14px;
+            border-radius: 8px;
+            margin-top: 12px;
+            font-weight: 500;
+        }
+
+        .success-message {
+            background: #d5f4e6;
+            border: 1px solid #abebc6;
+            color: #27ae60;
+            padding: 14px;
+            border-radius: 8px;
+            margin-top: 12px;
+            font-weight: 500;
+        }
+
+        .full-width {
+            grid-column: 1 / -1;
+        }
+
+        .section-title {
+            font-size: 0.9em;
+            font-weight: 700;
+            color: #2c3e50;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-top: 20px;
+            margin-bottom: 12px;
+        }
+
+        .no-data {
+            color: #7f8c8d;
+            font-style: italic;
+            padding: 20px;
+            text-align: center;
+        }
+
+        @media (max-width: 1024px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .intelligence-grid {
+                grid-template-columns: 1fr;
+            }
+
+            h1 {
+                font-size: 2em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef } = React;
+
+        const HoneypotDashboard = () => {
+            const [sessionId, setSessionId] = useState('test-session-001');
+            const [messageType, setMessageType] = useState('scammer');
+            const [messageText, setMessageText] = useState('Your bank account will be blocked today. Verify immediately by clicking on www.falselink.com!');
+            const [channel, setChannel] = useState('SMS');
+            const [loading, setLoading] = useState(false);
+            const [error, setError] = useState('');
+            const [success, setSuccess] = useState('');
+            const [response, setResponse] = useState(null);
+            const [conversationHistory, setConversationHistory] = useState([]);
+            const [stats, setStats] = useState({ scams: 0, extracted: 0, sessions: new Set() });
+            const conversationRef = useRef(null);
+
+            const API_BASE = 'http://localhost:8000';
+            const API_KEY = 'test-key-123';
+
+            const sendMessage = async () => {
+                if (!sessionId.trim() || !messageText.trim()) {
+                    setError('Please fill in all required fields');
+                    return;
+                }
+
+                setLoading(true);
+                setError('');
+                setSuccess('');
+
+                try {
+                    const payload = {
+                        sessionId,
+                        message: {
+                            sender: messageType,
+                            text: messageText,
+                            timestamp: new Date().toISOString()
+                        },
+                        conversationHistory,
+                        metadata: {
+                            channel,
+                            language: 'English',
+                            locale: 'IN'
+                        }
+                    };
+
+                    const res = await fetch(`${API_BASE}/inbound`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'x-api-key': API_KEY
+                        },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (!res.ok) throw new Error(`API Error: ${res.status}`);
+
+                    const data = await res.json();
+                    
+                    setResponse(data);
+                    updateStats(data);
+                    updateConversation(data);
+                    
+                    setSuccess('Message processed successfully ✅');
+                    setTimeout(() => setSuccess(''), 3000);
+                } catch (err) {
+                    setError(`Error: ${err.message}`);
+                }
+                finally {
+                    setLoading(false);
+                }
+            };
+
+            const updateStats = (data) => {
+                setStats(prev => {
+                    const newStats = { ...prev };
+                    newStats.sessions.add(sessionId);
+                    if (data.scamDetected) newStats.scams++;
+                    const intel = data.extractedIntelligence;
+                    newStats.extracted += (intel.upiIds?.length || 0) + 
+                                         (intel.phoneNumbers?.length || 0) + 
+                                         (intel.bankAccounts?.length || 0) + 
+                                         (intel.phishingLinks?.length || 0);
+                    return newStats;
+                });
+            };
+
+            const updateConversation = (data) => {
+                setConversationHistory(prev => {
+                    const updated = [...prev, { sender: messageType, text: messageText }];
+                    if (data.agentReply && messageType === 'scammer') {
+                        updated.push({ sender: 'agent', text: data.agentReply });
+                    }
+                    return updated;
+                });
+            };
+
+            useEffect(() => {
+                if (conversationRef.current) {
+                    conversationRef.current.scrollTop = conversationRef.current.scrollHeight;
+                }
+            }, [conversationHistory]);
+
+            const resetForm = () => {
+                setMessageText('');
+                setMessageType('scammer');
+                setConversationHistory([]);
+                setResponse(null);
+            };
+
+            return (
+                <div className="container">
+                    <header>
+                        <h1>🍯 Agentic Honeypot</h1>
+                        <p className="subtitle">Scam Detection & Intelligent Agent Engagement</p>
+                    </header>
+
+                    <div className="dashboard-grid">
+                        {/* Conversation Tester */}
+                        <div className="card">
+                            <h2>💬 Test Conversation</h2>
+                            
+                            <div className="form-group">
+                                <label>Session ID</label>
+                                <input
+                                    type="text"
+                                    value={sessionId}
+                                    onChange={(e) => setSessionId(e.target.value)}
+                                    placeholder="e.g., test-001"
+                                />
+                            </div>
+
+                            <div className="form-group">
+                                <label>Message Type</label>
+                                <select value={messageType} onChange={(e) => setMessageType(e.target.value)}>
+                                    <option value="scammer">🚨 Scammer Message</option>
+                                    <option value="agent">🤖 Agent Reply</option>
+                                </select>
+                            </div>
+
+                            <div className="form-group">
+                                <label>Message Text</label>
+                                <textarea
+                                    value={messageText}
+                                    onChange={(e) => setMessageText(e.target.value)}
+                                    placeholder="Enter the message..."
+                                />
+                            </div>
+
+                            <div className="form-group">
+                                <label>Channel</label>
+                                <select value={channel} onChange={(e) => setChannel(e.target.value)}>
+                                    <option value="SMS">SMS</option>
+                                    <option value="WHATSAPP">WhatsApp</option>
+                                    <option value="EMAIL">Email</option>
+                                </select>
+                            </div>
+
+                            <div className="button-group">
+                                <button className="btn-send" onClick={sendMessage} disabled={loading}>
+                                    {loading ? (
+                                        <span className="loading">
+                                            <span className="spinner"></span>
+                                            Processing...
+                                        </span>
+                                    ) : 'Send Message'}
+                                </button>
+                                <button className="btn-reset" onClick={resetForm}>Reset</button>
+                            </div>
+
+                            {error && <div className="error-message">{error}</div>}
+                            {success && <div className="success-message">{success}</div>}
+                        </div>
+
+                        {/* Statistics */}
+                        <div className="card">
+                            <h2>📊 Statistics</h2>
+                            
+                            <div className="stats-grid">
+                                <div className="stat-box">
+                                    <div className="stat-number">{stats.scams}</div>
+                                    <div className="stat-label">Scams Detected</div>
+                                </div>
+                                <div className="stat-box">
+                                    <div className="stat-number">{stats.extracted}</div>
+                                    <div className="stat-label">Intelligence Items</div>
+                                </div>
+                                <div className="stat-box">
+                                    <div className="stat-number">{stats.sessions.size}</div>
+                                    <div className="stat-label">Sessions</div>
+                                </div>
+                            </div>
+
+                            {response && (
+                                <>
+                                    <div className="section-title">Session Info</div>
+                                    <div style={{ display: 'grid', gap: '10px' }}>
+                                        <div>
+                                            <strong>Scam Detected:</strong>
+                                            <span className={`badge ${response.scamDetected ? 'badge-danger' : 'badge-success'}`}>
+                                                {response.scamDetected ? '🚨 YES' : '✅ NO'}
+                                            </span>
+                                        </div>
+                                        <div>
+                                            <strong>Messages:</strong>
+                                            <span className="badge badge-info">{response.engagementMetrics.totalMessagesExchanged}</span>
+                                        </div>
+                                        <div>
+                                            <strong>Duration:</strong>
+                                            <span className="badge badge-info">{response.engagementMetrics.engagementDurationSeconds}s</span>
+                                        </div>
+                                    </div>
+                                </>
+                            )}
+                        </div>
+
+                        {/* Conversation */}
+                        <div className="card full-width">
+                            <h2>💭 Conversation History</h2>
+                            <div className="conversation-view" ref={conversationRef}>
+                                {conversationHistory.length === 0 ? (
+                                    <div className="no-data">Messages will appear here...</div>
+                                ) : (
+                                    conversationHistory.map((msg, idx) => (
+                                        <div key={idx} className={`message ${msg.sender}`}>
+                                            <div className="message-sender">
+                                                {msg.sender === 'scammer' ? '🚨 Scammer' : '🤖 Agent'}
+                                            </div>
+                                            <div className="message-text">{msg.text}</div>
+                                        </div>
+                                    ))
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Intelligence Extraction */}
+                        {response && (
+                            <div className="card full-width">
+                                <h2>🔍 Extracted Intelligence</h2>
+                                <div className="intelligence-grid">
+                                    <div className="intelligence-item">
+                                        <strong>🔗 URLs</strong>
+                                        {response.extractedIntelligence.phishingLinks?.length > 0 ? (
+                                            response.extractedIntelligence.phishingLinks.map((url, i) => (
+                                                <div key={i}><code>{url}</code></div>
+                                            ))
+                                        ) : (
+                                            <div className="no-data" style={{padding: '8px'}}>—</div>
+                                        )}
+                                    </div>
+                                    <div className="intelligence-item">
+                                        <strong>💰 UPI IDs</strong>
+                                        {response.extractedIntelligence.upiIds?.length > 0 ? (
+                                            response.extractedIntelligence.upiIds.map((upi, i) => (
+                                                <div key={i}><code>{upi}</code></div>
+                                            ))
+                                        ) : (
+                                            <div className="no-data" style={{padding: '8px'}}>—</div>
+                                        )}
+                                    </div>
+                                    <div className="intelligence-item">
+                                        <strong>📞 Phone Numbers</strong>
+                                        {response.extractedIntelligence.phoneNumbers?.length > 0 ? (
+                                            response.extractedIntelligence.phoneNumbers.map((phone, i) => (
+                                                <div key={i}><code>{phone}</code></div>
+                                            ))
+                                        ) : (
+                                            <div className="no-data" style={{padding: '8px'}}>—</div>
+                                        )}
+                                    </div>
+                                    <div className="intelligence-item">
+                                        <strong>🏦 Bank Accounts</strong>
+                                        {response.extractedIntelligence.bankAccounts?.length > 0 ? (
+                                            response.extractedIntelligence.bankAccounts.map((acc, i) => (
+                                                <div key={i}><code>{acc}</code></div>
+                                            ))
+                                        ) : (
+                                            <div className="no-data" style={{padding: '8px'}}>—</div>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Raw Response */}
+                        {response && (
+                            <div className="card full-width">
+                                <h2>📝 API Response</h2>
+                                <div className="response-container">
+                                    <pre>{JSON.stringify(response, null, 2)}</pre>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            );
+        };
+
+        ReactDOM.render(<HoneypotDashboard />, document.getElementById('root'));
+    </script>
+</body>
+</html>

@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🍯 Agentic Honeypot Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+        }
+
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .subtitle {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            transition: transform 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+        }
+
+        .card h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+            font-size: 0.95em;
+        }
+
+        input, textarea, select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 0.95em;
+            transition: border-color 0.3s;
+        }
+
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+            font-family: 'Courier New', monospace;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        button {
+            flex: 1;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-send {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-send:hover {
+            background: #5568d3;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-reset {
+            background: #f0f0f0;
+            color: #333;
+        }
+
+        .btn-reset:hover {
+            background: #e0e0e0;
+        }
+
+        .response-container {
+            background: #f8f9fa;
+            border-left: 4px solid #667eea;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 20px;
+            max-height: 400px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-box {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 2em;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: 600;
+            margin: 5px 0;
+        }
+
+        .badge-success {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .badge-danger {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .badge-info {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+
+        .conversation {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 15px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .message {
+            margin-bottom: 12px;
+            padding: 10px;
+            border-radius: 8px;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message.scammer {
+            background: #ffe0e0;
+            border-left: 3px solid #dc3545;
+            margin-right: 20px;
+        }
+
+        .message.agent {
+            background: #e0f0ff;
+            border-left: 3px solid #007bff;
+            margin-left: 20px;
+        }
+
+        .message-sender {
+            font-weight: 600;
+            font-size: 0.85em;
+            margin-bottom: 5px;
+            color: #666;
+        }
+
+        .message-text {
+            color: #333;
+            line-height: 1.4;
+        }
+
+        .intelligence-list {
+            list-style: none;
+        }
+
+        .intelligence-item {
+            padding: 8px 0;
+            border-bottom: 1px solid #e0e0e0;
+            font-size: 0.9em;
+        }
+
+        .intelligence-item:last-child {
+            border-bottom: none;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .full-width {
+            grid-column: 1 / -1;
+        }
+
+        @media (max-width: 1024px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        .error-message {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+            padding: 12px;
+            border-radius: 6px;
+            margin-top: 10px;
+        }
+
+        .success-message {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+            padding: 12px;
+            border-radius: 6px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🍯 Agentic Honeypot Dashboard</h1>
+            <p class="subtitle">Scam Detection & Intelligence Extraction System</p>
+        </header>
+
+        <div class="main-grid">
+            <!-- Conversation Tester -->
+            <div class="card">
+                <h2>🔄 Conversation Tester</h2>
+                
+                <div class="form-group">
+                    <label>Session ID</label>
+                    <input type="text" id="sessionId" placeholder="e.g., test-session-001" value="test-session-001">
+                </div>
+
+                <div class="form-group">
+                    <label>Message Type</label>
+                    <select id="messageType">
+                        <option value="scammer">🚨 Scammer Message</option>
+                        <option value="agent">🤖 Agent Reply</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Message Text</label>
+                    <textarea id="messageText" placeholder="Enter the message...">Your bank account will be blocked today. Verify immediately by clicking on www.falselink.com!</textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>Channel</label>
+                    <select id="channel">
+                        <option value="SMS">SMS</option>
+                        <option value="WHATSAPP">WhatsApp</option>
+                        <option value="EMAIL">Email</option>
+                    </select>
+                </div>
+
+                <div class="button-group">
+                    <button class="btn-send" onclick="sendMessage()">Send Message</button>
+                    <button class="btn-reset" onclick="resetForm()">Reset</button>
+                </div>
+
+                <div class="loading" id="loading">
+                    <span class="spinner"></span>
+                    <span>Processing...</span>
+                </div>
+
+                <div id="errorMessage" class="error-message" style="display: none;"></div>
+                <div id="successMessage" class="success-message" style="display: none;"></div>
+            </div>
+
+            <!-- Real-time Stats -->
+            <div class="card">
+                <h2>📊 Real-time Statistics</h2>
+                
+                <div class="stats-grid">
+                    <div class="stat-box">
+                        <div class="stat-number" id="scamCount">0</div>
+                        <div class="stat-label">Scams Detected</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-number" id="extractCount">0</div>
+                        <div class="stat-label">Intelligence Items</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-number" id="sessionCount">0</div>
+                        <div class="stat-label">Active Sessions</div>
+                    </div>
+                </div>
+
+                <h3 style="margin-top: 20px; color: #333; font-size: 1.1em;">Session Info</h3>
+                <div id="sessionInfo" style="margin-top: 15px;">
+                    <p style="color: #999; font-style: italic;">No session active</p>
+                </div>
+            </div>
+
+            <!-- Conversation History -->
+            <div class="card full-width">
+                <h2>💬 Conversation History</h2>
+                <div class="conversation" id="conversationHistory">
+                    <p style="color: #999; font-style: italic;">Messages will appear here...</p>
+                </div>
+            </div>
+
+            <!-- Extracted Intelligence -->
+            <div class="card full-width">
+                <h2>🔍 Extracted Intelligence</h2>
+                <div id="extractedIntelligence" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px;">
+                    <div>
+                        <strong>🔗 URLs</strong>
+                        <ul class="intelligence-list" id="urlsList">
+                            <li class="intelligence-item">—</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <strong>💰 UPI IDs</strong>
+                        <ul class="intelligence-list" id="upiList">
+                            <li class="intelligence-item">—</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <strong>📞 Phone Numbers</strong>
+                        <ul class="intelligence-list" id="phoneList">
+                            <li class="intelligence-item">—</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <strong>🏦 Bank Accounts</strong>
+                        <ul class="intelligence-list" id="accountsList">
+                            <li class="intelligence-item">—</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Raw Response -->
+            <div class="card full-width">
+                <h2>📝 Raw API Response</h2>
+                <div class="response-container" id="responseContainer">
+                    <p style="color: #999;">API response will appear here...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8000';
+        const API_KEY = 'test-key-123';
+        let conversationHistory = [];
+        let sessionStats = { scams: 0, extracted: 0, sessions: new Set() };
+
+        async function sendMessage() {
+            const sessionId = document.getElementById('sessionId').value.trim();
+            const messageType = document.getElementById('messageType').value;
+            const messageText = document.getElementById('messageText').value.trim();
+            const channel = document.getElementById('channel').value;
+
+            if (!sessionId || !messageText) {
+                showError('Please fill in all required fields');
+                return;
+            }
+
+            showLoading(true);
+            clearMessages();
+
+            try {
+                const payload = {
+                    sessionId,
+                    message: {
+                        sender: messageType,
+                        text: messageText,
+                        timestamp: new Date().toISOString()
+                    },
+                    conversationHistory,
+                    metadata: {
+                        channel,
+                        language: 'English',
+                        locale: 'IN'
+                    }
+                };
+
+                const response = await fetch(`${API_BASE}/inbound`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-api-key': API_KEY
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    throw new Error(`API Error: ${response.status}`);
+                }
+
+                const data = await response.json();
+                
+                // Update stats
+                sessionStats.sessions.add(sessionId);
+                if (data.scamDetected) sessionStats.scams++;
+                if (data.extractedIntelligence) {
+                    const intel = data.extractedIntelligence;
+                    sessionStats.extracted += (intel.upiIds?.length || 0) + 
+                                             (intel.phoneNumbers?.length || 0) + 
+                                             (intel.bankAccounts?.length || 0) + 
+                                             (intel.phishingLinks?.length || 0);
+                }
+
+                updateStats();
+                updateResponse(data);
+                updateConversation(data, messageText, messageType);
+                updateSessionInfo(data);
+
+                showSuccess('Message processed successfully');
+                
+            } catch (error) {
+                showError(`Error: ${error.message}`);
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        function updateStats() {
+            document.getElementById('scamCount').textContent = sessionStats.scams;
+            document.getElementById('extractCount').textContent = sessionStats.extracted;
+            document.getElementById('sessionCount').textContent = sessionStats.sessions.size;
+        }
+
+        function updateResponse(data) {
+            const container = document.getElementById('responseContainer');
+            container.innerHTML = `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+        }
+
+        function updateConversation(data, messageText, messageType) {
+            const historyDiv = document.getElementById('conversationHistory');
+            
+            const msg = document.createElement('div');
+            msg.className = `message ${messageType}`;
+            msg.innerHTML = `
+                <div class="message-sender">${messageType === 'scammer' ? '🚨 Scammer' : '🤖 Agent'}</div>
+                <div class="message-text">${messageText}</div>
+            `;
+            
+            if (historyDiv.children[0]?.textContent.includes('Messages will appear')) {
+                historyDiv.innerHTML = '';
+            }
+            historyDiv.appendChild(msg);
+
+            if (data.agentReply && messageType === 'scammer') {
+                const agentMsg = document.createElement('div');
+                agentMsg.className = 'message agent';
+                agentMsg.innerHTML = `
+                    <div class="message-sender">🤖 Agent</div>
+                    <div class="message-text">${data.agentReply}</div>
+                `;
+                historyDiv.appendChild(agentMsg);
+            }
+
+            // Update conversation history for next request
+            conversationHistory.push({
+                sender: messageType,
+                text: messageText
+            });
+
+            if (data.agentReply && messageType === 'scammer') {
+                conversationHistory.push({
+                    sender: 'agent',
+                    text: data.agentReply
+                });
+            }
+
+            historyDiv.scrollTop = historyDiv.scrollHeight;
+        }
+
+        function updateSessionInfo(data) {
+            const info = document.getElementById('sessionInfo');
+            info.innerHTML = `
+                <div style="display: grid; gap: 10px;">
+                    <div>
+                        <strong>Scam Detected:</strong>
+                        <span class="badge ${data.scamDetected ? 'badge-danger' : 'badge-success'}">
+                            ${data.scamDetected ? '🚨 YES' : '✅ NO'}
+                        </span>
+                    </div>
+                    <div>
+                        <strong>Messages:</strong>
+                        <span class="badge badge-info">${data.engagementMetrics.totalMessagesExchanged}</span>
+                    </div>
+                    <div>
+                        <strong>Duration:</strong>
+                        <span class="badge badge-info">${data.engagementMetrics.engagementDurationSeconds}s</span>
+                    </div>
+                    <div>
+                        <strong>Status:</strong>
+                        <span class="badge ${data.engagementComplete ? 'badge-success' : 'badge-info'}">
+                            ${data.engagementComplete ? '✅ Complete' : '🔄 Active'}
+                        </span>
+                    </div>
+                </div>
+            `;
+
+            // Update intelligence
+            updateIntelligence(data.extractedIntelligence);
+        }
+
+        function updateIntelligence(intel) {
+            updateList('urlsList', intel.phishingLinks || []);
+            updateList('upiList', intel.upiIds || []);
+            updateList('phoneList', intel.phoneNumbers || []);
+            updateList('accountsList', intel.bankAccounts || []);
+        }
+
+        function updateList(elementId, items) {
+            const list = document.getElementById(elementId);
+            if (items.length === 0) {
+                list.innerHTML = '<li class="intelligence-item">—</li>';
+            } else {
+                list.innerHTML = items.map(item => 
+                    `<li class="intelligence-item"><code>${item}</code></li>`
+                ).join('');
+            }
+        }
+
+        function resetForm() {
+            document.getElementById('messageText').value = '';
+            document.getElementById('messageType').value = 'scammer';
+            conversationHistory = [];
+            document.getElementById('conversationHistory').innerHTML = 
+                '<p style="color: #999; font-style: italic;">Messages will appear here...</p>';
+        }
+
+        function showLoading(show) {
+            document.getElementById('loading').style.display = show ? 'block' : 'none';
+        }
+
+        function clearMessages() {
+            document.getElementById('errorMessage').style.display = 'none';
+            document.getElementById('successMessage').style.display = 'none';
+        }
+
+        function showError(message) {
+            const div = document.getElementById('errorMessage');
+            div.textContent = message;
+            div.style.display = 'block';
+        }
+
+        function showSuccess(message) {
+            const div = document.getElementById('successMessage');
+            div.textContent = message;
+            div.style.display = 'block';
+            setTimeout(() => div.style.display = 'none', 3000);
+        }
+
+        // Initialize stats on load
+        updateStats();
+    </script>
+</body>
+</html>
