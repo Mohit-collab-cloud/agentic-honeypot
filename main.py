@@ -1,13 +1,14 @@
 from fastapi import FastAPI, Header, HTTPException
 from fastapi.responses import FileResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
-from pydantic import BaseModel
-from typing import List, Optional, Dict, Any
+from pydantic import BaseModel, field_validator
+from typing import List, Optional, Dict, Any, Union
 from dotenv import load_dotenv
 import os
 import openai
 import logging
 from datetime import datetime
+import json
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -32,12 +33,38 @@ from callback import send_final_result_to_guvi
 # Init FastAPI
 app = FastAPI(title="Agentic Honeypot", version="1.0")
 
+# Add exception handler for validation errors
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import JSONResponse
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request, exc):
+    """Log validation errors to see what GUVI is sending"""
+    logger.error(f"❌ Validation Error from {request.client.host}")
+    logger.error(f"Request body: {exc.body}")
+    logger.error(f"Errors: {exc.errors()}")
+    return JSONResponse(
+        status_code=422,
+        content={"detail": exc.errors(), "body": str(exc.body)},
+    )
+
 # ---- Pydantic models for request validation ----
 
 class Message(BaseModel):
     sender: str
     text: str
-    timestamp: Optional[str] = None
+    timestamp: Optional[Union[str, int]] = None
+    
+    @field_validator('timestamp', mode='before')
+    @classmethod
+    def convert_timestamp(cls, v):
+        """Convert Unix timestamp (int) to ISO string format"""
+        if isinstance(v, int):
+            # Convert Unix timestamp (milliseconds or seconds)
+            if v > 9999999999:  # milliseconds
+                v = v / 1000
+            return datetime.utcfromtimestamp(v).isoformat() + "Z"
+        return v
 
 class Metadata(BaseModel):
     channel: Optional[str] = None
@@ -69,11 +96,19 @@ async def receive_message(
     
     # ✅ Authentication
     if x_api_key != API_KEY:
-        logger.warning(f"Unauthorized access attempt")
+        logger.warning(f"Unauthorized access attempt with key: {x_api_key}")
         raise HTTPException(status_code=401, detail="Unauthorized")
     
     session_id = payload.sessionId
     message_text = payload.message.text
+    
+    # Log the complete incoming request
+    logger.info(f"[{session_id}] ===== INCOMING REQUEST =====")
+    logger.info(f"[{session_id}] Message from {payload.message.sender}: {message_text}")
+    logger.info(f"[{session_id}] Metadata: channel={payload.metadata.channel if payload.metadata else 'N/A'}, "
+                f"locale={payload.metadata.locale if payload.metadata else 'N/A'}")
+    logger.info(f"[{session_id}] Conversation history length: {len(payload.conversationHistory)}")
+    logger.info(f"[{session_id}] =============================")
     channel = payload.metadata.channel if payload.metadata else "SMS"
     locale = payload.metadata.locale if payload.metadata else "IN"
     language = payload.metadata.language if payload.metadata else "English"
