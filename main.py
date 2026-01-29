@@ -54,7 +54,7 @@ class InboundRequest(BaseModel):
 @app.post("/inbound")
 async def receive_message(
     payload: InboundRequest,
-    x_api_key: str = Header(None)
+    x_api_key: str = Header(..., alias="x-api-key")
 ):
     """
     Main honeypot endpoint that processes incoming scam messages.
