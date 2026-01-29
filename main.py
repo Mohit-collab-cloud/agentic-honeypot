@@ -186,9 +186,10 @@ async def receive_message(
     
     # 6️⃣ Send GUVI callback if scam detected (mandatory for evaluation)
     # IMPORTANT: Send callback whenever scam is detected, not just when engagement ends
+    # But wait for at least 1 agent reply to show engagement
     callback_sent = False
-    if scam_detected and not has_callback_been_sent(session_id):
-        logger.info(f"[{session_id}] Preparing to send GUVI callback (scam detected)")
+    if scam_detected and session["agentEngaged"] and not has_callback_been_sent(session_id):
+        logger.info(f"[{session_id}] Preparing to send GUVI callback (scam detected + agent engaged)")
         session_summary = get_session_summary(session_id)
         if send_final_result_to_guvi(session_summary):
             mark_callback_sent(session_id)
