@@ -369,8 +369,11 @@ def generate_agent_reply(session: Dict[str, Any], channel: str = "SMS", locale: 
 def extract_intelligence(session: Dict[str, Any], latest_message: str) -> Dict[str, Any]:
     """
     Extract intelligence using combined LLM + regex approach.
-    Returns extracted data with validated fields.
+    Returns extracted data with validated fields + keywords.
     """
+    # Import detector keywords
+    from detector import SCAM_KEYWORDS
+    
     history = session["conversationHistory"]
     
     # First: use LLM to identify candidate extractions
@@ -392,7 +395,8 @@ def extract_intelligence(session: Dict[str, Any], latest_message: str) -> Dict[s
         "upi": [],
         "accounts": [],
         "urls": [],
-        "phones": []
+        "phones": [],
+        "suspiciousKeywords": []
     }
     
     # Skip LLM extraction in mock mode - regex is enough
@@ -413,8 +417,17 @@ def extract_intelligence(session: Dict[str, Any], latest_message: str) -> Dict[s
                 json_str = content[start:end]
                 llm_extracted = json.loads(json_str)
                 extracted = {k: v if isinstance(v, list) else [] for k, v in llm_extracted.items()}
+                extracted["suspiciousKeywords"] = []
         except Exception as e:
             print(f"⚠️ LLM extraction error: {e}")
+    
+    # Extract suspicious keywords
+    message_lower = latest_message.lower()
+    found_keywords = []
+    for keyword in SCAM_KEYWORDS:
+        if keyword.lower() in message_lower:
+            found_keywords.append(keyword)
+    extracted["suspiciousKeywords"] = list(set(found_keywords))  # Remove duplicates
     
     # Second: Validate and enhance with regex patterns
     full_text = latest_message
@@ -448,6 +461,10 @@ def extract_intelligence(session: Dict[str, Any], latest_message: str) -> Dict[s
         acc for acc in extracted["accounts"] + account_matches 
         if not re.match(r'[6-9]\d{9}', acc)  # Exclude phone-like patterns
     ]))
+    
+    logger.info(f"Extracted intelligence: UPI={len(extracted['upi'])}, Phones={len(extracted['phones'])}, "
+                f"URLs={len(extracted['urls'])}, Accounts={len(extracted['accounts'])}, "
+                f"Keywords={len(extracted['suspiciousKeywords'])}")
     
     return extracted
 
